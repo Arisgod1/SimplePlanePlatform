@@ -123,6 +123,13 @@ body {
 .section { display: none; }
 .section.active { display: block; }
 
+/* Settings was the only page with a max-width (960px). On a 1440 window the
+   other six stretched to 1171px, so a node card's six fields each became
+   184px of empty input. Cap the reading measure for every page instead; the
+   log page keeps its full width because its terminal is the point. */
+.section.active { max-width: 1040px; }
+#sec-logs.active { max-width: none; display: flex; flex-direction: column; height: 100%; }
+
 .section-header {
   display: flex;
   align-items: center;
@@ -132,14 +139,18 @@ body {
 
 .section-header h2 { font-size: 20px; font-weight: 600; }
 
-/* Settings has its own form layout: labels must not constrain the URL field. */
+/* Settings used to be a second design system: a 28px tracked heading, an
+   uppercase eyebrow above it, and a 14px-radius panel while every other page
+   used 20px headings and 6-10px radii. It now shares the page scale; only the
+   form's own layout rules (labels must not constrain the URL field) remain. */
 #sec-settings { max-width: 960px; margin: 0 auto; }
-.settings-eyebrow { color: var(--accent); font-size: 10px; letter-spacing: 2px; margin-bottom: 12px; }
-#sec-settings h2 { font-size: 28px; letter-spacing: 1px; }
+/* Decorative kicker above the heading; the heading carries its own weight. */
+.settings-eyebrow { display: none; }
 .settings-intro { margin-top: 10px; color: var(--text-secondary); line-height: 1.6; }
-.settings-panel { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+.settings-panel { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
 .settings-panel-heading { display: flex; align-items: center; gap: 16px; padding: 24px 28px; border-bottom: 1px solid var(--border); }
-.settings-icon { display: grid; place-items: center; width: 44px; height: 44px; flex-shrink: 0; border: 1px solid var(--border-light); border-radius: 12px; background: var(--accent-dim); color: var(--accent); font-size: 28px; }
+/* 44px rounded tile holding a glyph: a decorative marker, not an affordance. */
+.settings-icon { display: none; }
 .settings-panel h3 { font-size: 16px; font-weight: 600; }
 .settings-panel-heading p, .settings-check p { color: var(--text-secondary); font-size: 12px; line-height: 1.7; margin-top: 5px; }
 .settings-form { display: grid; gap: 10px; padding: 28px; }
@@ -270,7 +281,10 @@ body {
   align-items: center;
 }
 
-.service-uptime { font-size: 12px; color: var(--text-muted); }
+/* app.js never writes these spans, so they are always empty. Hide them rather
+   than leave an unexplained gap beside the action buttons. */
+.service-uptime:empty { display: none; }
+.service-uptime { font-size: 12px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
 
 .service-actions { display: flex; gap: 6px; }
 
@@ -365,7 +379,9 @@ body {
 }
 
 .info-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
-.info-value { font-size: 15px; font-weight: 500; font-family: 'SF Mono', 'JetBrains Mono', monospace; }
+/* Ports, counts and percentages change every poll; without tabular figures
+   they shift width and the row jitters. */
+.info-value { font-size: 15px; font-weight: 500; font-family: 'SF Mono', 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; }
 
 /* ============================================================
    Config Form
@@ -438,7 +454,10 @@ margin-top: -4px;
 .server-cards-container { display: flex; flex-direction: column; gap: 12px; }
 
 .server-card {
-  background: var(--bg-input);
+  /* Was --bg-input, the same colour as the .input fields inside it: six fields
+     merged into one undifferentiated block. The card sits a step above the
+     field ground so the controls read as editable regions. */
+  background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   padding: 14px;
@@ -456,8 +475,20 @@ margin-top: -4px;
 
 .server-fields {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  /* auto-fit/minmax(140px) resolved to 5 columns at a 831px card, leaving the
+     six fields as 5+1 with a hole. Explicit steps keep the pairing clean: six
+     across on wide windows, three-and-three below that, two below 760px.
+     The widest cipher name renders at ~142px, which sets the floor. */
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
+}
+
+@media (min-width: 1240px) {
+  .server-fields { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+}
+
+@media (max-width: 759px) {
+  .server-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 .server-field label {
@@ -516,7 +547,7 @@ margin-top: -4px;
 }
 
 .route-col-header h3 { font-size: 13px; font-weight: 500; }
-.route-count { font-size: 11px; color: var(--text-muted); }
+.route-count { font-size: 11px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
 
 .route-editor { min-height: 300px; }
 
@@ -544,6 +575,10 @@ margin-top: -4px;
 
 .preset-info { display: flex; flex-direction: column; gap: 3px; }
 .preset-name { font-size: 14px; font-weight: 500; }
+/* app.js emits .preset-desc but the stylesheet never defined it, so the
+   description inherited the name's colour and weight: three levels collapsed
+   into one. */
+.preset-desc { font-size: 12px; color: var(--text-secondary); }
 .preset-meta { font-size: 12px; color: var(--text-muted); font-family: monospace; }
 .preset-actions { display: flex; gap: 6px; }
 
@@ -579,7 +614,12 @@ margin-top: -4px;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 14px;
-  height: calc(100vh - 180px);
+  /* Was calc(100vh - 180px): a magic number tied to the header height and page
+     padding, leaving 420px at the 600px minimum window. Flexing the section
+     instead gives the terminal whatever height is actually left. */
+  height: auto;
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
   font-family: 'SF Mono', 'JetBrains Mono', 'Menlo', monospace;
   font-size: 12px;
@@ -593,8 +633,20 @@ margin-top: -4px;
   padding: 1px 0;
 }
 
-.log-time { color: var(--text-muted); flex-shrink: 0; }
-.log-text { white-space: pre-wrap; word-break: break-all; }
+.log-time { color: var(--text-muted); flex-shrink: 0; font-variant-numeric: tabular-nums; }
+/* break-all split URLs and base64 keys mid-token; break-word only wraps when a
+   token genuinely cannot fit. */
+.log-text { white-space: pre-wrap; word-break: break-word; overflow-wrap: anywhere; }
+/* app.js writes [service] into .log-level, but the class had no rule at all,
+   so the tag sat at body colour and the message column started at a ragged
+   offset. inline-block is required for the min-width to apply. */
+.log-level {
+  display: inline-block;
+  flex-shrink: 0;
+  min-width: 7.5em;
+  font-family: 'SF Mono', 'JetBrains Mono', 'Menlo', monospace;
+  color: var(--text-muted);
+}
 .log-info { color: var(--text-secondary); }
 .log-success { color: var(--success); }
 .log-warning { color: var(--warning); }
@@ -832,3 +884,17 @@ margin-top: -4px;
 #subscriptionPanel[hidden], #subscriptionPanel [hidden] { display: none; }
 #subscriptionQr { display: block; margin: 12px 0; background: white; image-rendering: pixelated; }
 #subscriptionCode { display: block; margin: 10px 0 16px; font: 600 1.2rem monospace; letter-spacing: .08em; }
+
+/* ============================================================
+   Reduced motion
+   ============================================================ */
+/* Two infinite animations ship (the starting-status pulse and the
+   indeterminate update bar) and nothing honoured the OS preference. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
