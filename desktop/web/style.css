@@ -34,7 +34,7 @@
 /* Keyboard focus. Only the settings panel had a visible ring; every other
    control relied on a border tint that vanishes against the dark ground.
    Color is --accent (#4f8cff): 4.8:1 on cards, 5.2:1 on the sidebar. */
-:where(button, input, select, textarea, a, summary, [tabindex]):focus-visible {
+:where(button, input, select, textarea):focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
@@ -122,13 +122,11 @@ body {
 }
 
 .section { display: none; }
-.section.active { display: block; }
-
 /* Settings was the only page with a max-width (960px). On a 1440 window the
    other six stretched to 1171px, so a node card's six fields each became
    184px of empty input. Cap the reading measure for every page instead; the
    log page keeps its full width because its terminal is the point. */
-.section.active { max-width: 1040px; }
+.section.active { display: block; max-width: 1040px; }
 #sec-logs.active { max-width: none; display: flex; flex-direction: column; height: 100%; }
 
 .section-header {
@@ -244,11 +242,9 @@ body {
 .service-card.card-error { border-color: var(--error); }
 
 /* app.js maps `error` onto the `stopped` dot class, so the card carried a red
-   border beside a grey dot and the label "异常". Deriving the dot and label
-   from the card's own state class keeps the three signals consistent.
-   Specificity is raised to (0,3,0) so it outranks `.status-indicator.stopped`. */
-.service-card.card-error .status-indicator,
-.service-card.card-error .status-indicator.stopped {
+   border beside a grey dot and the label "异常". Deriving both from the card's
+   own state class keeps the three signals consistent. */
+.service-card.card-error .status-indicator {
   background: var(--error);
   box-shadow: 0 0 6px rgba(248, 113, 113, 0.5);
 }
@@ -460,9 +456,6 @@ margin-top: -4px;
 
 .input:focus, .select:focus { border-color: var(--accent); }
 
-/* Text fields keep the accent border on focus and take the shared ring from
-   the :focus-visible rule above; no outline suppression is needed. */
-
 /* ============================================================
    Server Cards
    ============================================================ */
@@ -490,10 +483,9 @@ margin-top: -4px;
 
 .server-fields {
   display: grid;
-  /* auto-fit/minmax(140px) resolved to 5 columns at a 831px card, leaving the
-     six fields as 5+1 with a hole. Explicit steps keep the pairing clean: six
-     across on wide windows, three-and-three below that, two below 760px.
-     The widest cipher name renders at ~142px, which sets the floor. */
+  /* auto-fit/minmax(140px) resolved to 5 columns at an 831px card, leaving the
+     six fields as 5+1 with a hole. Three-and-three below a wide window keeps
+     the pairing even; six across above it. */
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
 }
@@ -652,15 +644,14 @@ margin-top: -4px;
 /* break-all split URLs and base64 keys mid-token; break-word only wraps when a
    token genuinely cannot fit. */
 .log-text { white-space: pre-wrap; word-break: break-word; overflow-wrap: anywhere; }
-/* app.js writes [service] into .log-level, but the class had no rule at all,
-   so the tag sat at body colour and the message column started at a ragged
-   offset. inline-block is required for the min-width to apply. */
+/* app.js writes [service] into .log-level, but the class had no width or font
+   rule, so the tag sat at body font and the message column started at a ragged
+   offset. The level classes below supply the colour. */
 .log-level {
   display: inline-block;
   flex-shrink: 0;
   min-width: 7.5em;
   font-family: 'SF Mono', 'JetBrains Mono', 'Menlo', monospace;
-  color: var(--text-muted);
 }
 .log-info { color: var(--text-secondary); }
 .log-success { color: var(--success); }
