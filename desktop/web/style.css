@@ -149,8 +149,20 @@ body {
 .settings-intro { margin-top: 10px; color: var(--text-secondary); line-height: 1.6; }
 .settings-panel { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
 .settings-panel-heading { display: flex; align-items: center; gap: 16px; padding: 24px 28px; border-bottom: 1px solid var(--border); }
-/* 44px rounded tile holding a glyph: a decorative marker, not an affordance. */
-.settings-icon { display: none; }
+/* Section marker above the panel heading. Sized and coloured from the same
+   tokens as every other surface (glyph 18px, --radius-sm, --accent-dim over
+   --border) rather than the one-off 44px tile it used to be. */
+.settings-icon {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--accent-dim);
+  color: var(--accent);
+}
 .settings-panel h3 { font-size: 16px; font-weight: 600; }
 .settings-panel-heading p, .settings-check p { color: var(--text-secondary); font-size: 12px; line-height: 1.7; margin-top: 5px; }
 .settings-form { display: grid; gap: 10px; padding: 28px; }
