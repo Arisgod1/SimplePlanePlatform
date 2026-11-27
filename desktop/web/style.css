@@ -98,7 +98,8 @@ body {
   cursor: pointer;
   color: var(--text-secondary);
   font-size: 13px;
-  transition: all 0.12s ease;
+  /* Not `all`: it also animated the focus outline. */
+  transition: background 0.12s ease, color 0.12s ease;
 }
 
 .nav-item:hover { background: var(--bg-hover); color: var(--text-primary); }
@@ -324,7 +325,9 @@ body {
   color: var(--text-secondary);
   font-size: 13px;
   cursor: pointer;
-  transition: all 0.12s ease;
+  /* Not `all`: transitioning the outline made the focus ring fade in from the
+     UA 3px default and trap at an intermediate width. */
+  transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
 }
 
 .btn-action:hover { background: var(--bg-hover); color: var(--text-primary); border-color: var(--border-light); }
@@ -675,7 +678,9 @@ margin-top: -4px;
   background: var(--bg-card);
   color: var(--text-secondary);
   cursor: pointer;
-  transition: all 0.12s;
+  /* Not `all`: it animated the focus outline too, so the ring started at the
+     UA's 3px in the button's text colour and never settled on the 2px accent. */
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
 }
 
 .btn-sm:hover { background: var(--bg-hover); color: var(--text-primary); }
