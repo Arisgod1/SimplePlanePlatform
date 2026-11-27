@@ -8,10 +8,13 @@
   --bg-input: #161922;
   --text-primary: #e8eaed;
   --text-secondary: #9aa0a6;
-  --text-muted: #6b7280;
+  --text-muted: #8f96a3;
   --accent: #4f8cff;
-  --accent-hover: #3b7af0;
   --accent-dim: rgba(79, 140, 255, 0.15);
+  /* Solid accent: the only fills that carry white text (nav active, primary
+     buttons). #4f8cff reaches just 3.2:1 against white, #2f5cbe reaches 6.2:1. */
+  --accent-solid: #2f5cbe;
+  --accent-solid-hover: #28509f;
   --success: #34d399;
   --success-dim: rgba(52, 211, 153, 0.15);
   --warning: #fbbf24;
@@ -27,6 +30,21 @@
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
+
+/* Keyboard focus. Only the settings panel had a visible ring; every other
+   control relied on a border tint that vanishes against the dark ground.
+   Color is --accent (#4f8cff): 4.8:1 on cards, 5.2:1 on the sidebar. */
+:where(button, input, select, textarea):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* The switch input is 0x0 and fully transparent, so its own ring would be
+   invisible. Move the ring onto the visible track instead. */
+.toggle input:focus-visible + .toggle-track {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', sans-serif;
@@ -80,11 +98,12 @@ body {
   cursor: pointer;
   color: var(--text-secondary);
   font-size: 13px;
-  transition: all 0.12s ease;
+  /* Not `all`: it also animated the focus outline. */
+  transition: background 0.12s ease, color 0.12s ease;
 }
 
 .nav-item:hover { background: var(--bg-hover); color: var(--text-primary); }
-.nav-item.active { background: var(--accent); color: white; }
+.nav-item.active { background: var(--accent-solid); color: #ffffff; }
 
 .nav-footer {
   padding: 10px 16px;
@@ -103,7 +122,12 @@ body {
 }
 
 .section { display: none; }
-.section.active { display: block; }
+/* Settings was the only page with a max-width (960px). On a 1440 window the
+   other six stretched to 1171px, so a node card's six fields each became
+   184px of empty input. Cap the reading measure for every page instead; the
+   log page keeps its full width because its terminal is the point. */
+.section.active { display: block; max-width: 1040px; }
+#sec-logs.active { max-width: none; display: flex; flex-direction: column; height: 100%; }
 
 .section-header {
   display: flex;
@@ -114,14 +138,30 @@ body {
 
 .section-header h2 { font-size: 20px; font-weight: 600; }
 
-/* Settings has its own form layout: labels must not constrain the URL field. */
+/* Settings used to be a second design system: a 28px tracked heading, an
+   uppercase eyebrow above it, and a 14px-radius panel while every other page
+   used 20px headings and 6-10px radii. It now shares the page scale; only the
+   form's own layout rules (labels must not constrain the URL field) remain. */
 #sec-settings { max-width: 960px; margin: 0 auto; }
-.settings-eyebrow { color: var(--accent); font-size: 10px; letter-spacing: 2px; margin-bottom: 12px; }
-#sec-settings h2 { font-size: 28px; letter-spacing: 1px; }
+/* Decorative kicker above the heading; the heading carries its own weight. */
+.settings-eyebrow { display: none; }
 .settings-intro { margin-top: 10px; color: var(--text-secondary); line-height: 1.6; }
-.settings-panel { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+.settings-panel { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
 .settings-panel-heading { display: flex; align-items: center; gap: 16px; padding: 24px 28px; border-bottom: 1px solid var(--border); }
-.settings-icon { display: grid; place-items: center; width: 44px; height: 44px; flex-shrink: 0; border: 1px solid var(--border-light); border-radius: 12px; background: var(--accent-dim); color: var(--accent); font-size: 28px; }
+/* Section marker above the panel heading. Sized and coloured from the same
+   tokens as every other surface (glyph 18px, --radius-sm, --accent-dim over
+   --border) rather than the one-off 44px tile it used to be. */
+.settings-icon {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--accent-dim);
+  color: var(--accent);
+}
 .settings-panel h3 { font-size: 16px; font-weight: 600; }
 .settings-panel-heading p, .settings-check p { color: var(--text-secondary); font-size: 12px; line-height: 1.7; margin-top: 5px; }
 .settings-form { display: grid; gap: 10px; padding: 28px; }
@@ -134,7 +174,6 @@ body {
 .settings-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 12px; }
 .settings-panel button { min-height: 38px; padding: 8px 16px; flex-shrink: 0; font-family: inherit; }
 .settings-panel button:disabled { opacity: 0.5; cursor: wait; }
-.settings-panel :is(input, button):focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 .settings-unsaved { color: var(--warning); font-size: 12px; }
 .settings-source { display: grid; grid-template-columns: 108px minmax(0, 1fr); gap: 16px; margin: 0 28px 28px; padding: 16px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; font-size: 12px; line-height: 1.8; }
 .settings-source-label { color: var(--text-secondary); }
@@ -202,6 +241,15 @@ body {
 .service-card.card-starting { border-color: var(--warning); }
 .service-card.card-error { border-color: var(--error); }
 
+/* app.js maps `error` onto the `stopped` dot class, so the card carried a red
+   border beside a grey dot and the label "异常". Deriving both from the card's
+   own state class keeps the three signals consistent. */
+.service-card.card-error .status-indicator {
+  background: var(--error);
+  box-shadow: 0 0 6px rgba(248, 113, 113, 0.5);
+}
+.service-card.card-error .status-label { color: var(--error); }
+
 .service-card-header {
   display: flex;
   justify-content: space-between;
@@ -242,7 +290,10 @@ body {
   align-items: center;
 }
 
-.service-uptime { font-size: 12px; color: var(--text-muted); }
+/* app.js never writes these spans, so they are always empty. Hide them rather
+   than leave an unexplained gap beside the action buttons. */
+.service-uptime:empty { display: none; }
+.service-uptime { font-size: 12px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
 
 .service-actions { display: flex; gap: 6px; }
 
@@ -270,7 +321,9 @@ body {
   color: var(--text-secondary);
   font-size: 13px;
   cursor: pointer;
-  transition: all 0.12s ease;
+  /* Not `all`: transitioning the outline made the focus ring fade in from the
+     UA 3px default and trap at an intermediate width. */
+  transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
 }
 
 .btn-action:hover { background: var(--bg-hover); color: var(--text-primary); border-color: var(--border-light); }
@@ -337,7 +390,9 @@ body {
 }
 
 .info-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
-.info-value { font-size: 15px; font-weight: 500; font-family: 'SF Mono', 'JetBrains Mono', monospace; }
+/* Ports, counts and percentages change every poll; without tabular figures
+   they shift width and the row jitters. */
+.info-value { font-size: 15px; font-weight: 500; font-family: 'SF Mono', 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; }
 
 /* ============================================================
    Config Form
@@ -396,7 +451,6 @@ margin-top: -4px;
   color: var(--text-primary);
   font-size: 13px;
   font-family: inherit;
-  outline: none;
   transition: border-color 0.15s;
 }
 
@@ -408,7 +462,10 @@ margin-top: -4px;
 .server-cards-container { display: flex; flex-direction: column; gap: 12px; }
 
 .server-card {
-  background: var(--bg-input);
+  /* Was --bg-input, the same colour as the .input fields inside it: six fields
+     merged into one undifferentiated block. The card sits a step above the
+     field ground so the controls read as editable regions. */
+  background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   padding: 14px;
@@ -426,8 +483,19 @@ margin-top: -4px;
 
 .server-fields {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  /* auto-fit/minmax(140px) resolved to 5 columns at an 831px card, leaving the
+     six fields as 5+1 with a hole. Three-and-three below a wide window keeps
+     the pairing even; six across above it. */
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
+}
+
+@media (min-width: 1240px) {
+  .server-fields { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+}
+
+@media (max-width: 759px) {
+  .server-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 .server-field label {
@@ -463,7 +531,6 @@ margin-top: -4px;
   font-size: 12px;
   line-height: 1.6;
   resize: vertical;
-  outline: none;
   tab-size: 4;
 }
 
@@ -487,7 +554,7 @@ margin-top: -4px;
 }
 
 .route-col-header h3 { font-size: 13px; font-weight: 500; }
-.route-count { font-size: 11px; color: var(--text-muted); }
+.route-count { font-size: 11px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
 
 .route-editor { min-height: 300px; }
 
@@ -515,6 +582,10 @@ margin-top: -4px;
 
 .preset-info { display: flex; flex-direction: column; gap: 3px; }
 .preset-name { font-size: 14px; font-weight: 500; }
+/* app.js emits .preset-desc but the stylesheet never defined it, so the
+   description inherited the name's colour and weight: three levels collapsed
+   into one. */
+.preset-desc { font-size: 12px; color: var(--text-secondary); }
 .preset-meta { font-size: 12px; color: var(--text-muted); font-family: monospace; }
 .preset-actions { display: flex; gap: 6px; }
 
@@ -550,7 +621,12 @@ margin-top: -4px;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 14px;
-  height: calc(100vh - 180px);
+  /* Was calc(100vh - 180px): a magic number tied to the header height and page
+     padding, leaving 420px at the 600px minimum window. Flexing the section
+     instead gives the terminal whatever height is actually left. */
+  height: auto;
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
   font-family: 'SF Mono', 'JetBrains Mono', 'Menlo', monospace;
   font-size: 12px;
@@ -564,8 +640,19 @@ margin-top: -4px;
   padding: 1px 0;
 }
 
-.log-time { color: var(--text-muted); flex-shrink: 0; }
-.log-text { white-space: pre-wrap; word-break: break-all; }
+.log-time { color: var(--text-muted); flex-shrink: 0; font-variant-numeric: tabular-nums; }
+/* break-all split URLs and base64 keys mid-token; break-word only wraps when a
+   token genuinely cannot fit. */
+.log-text { white-space: pre-wrap; word-break: break-word; overflow-wrap: anywhere; }
+/* app.js writes [service] into .log-level, but the class had no width or font
+   rule, so the tag sat at body font and the message column started at a ragged
+   offset. The level classes below supply the colour. */
+.log-level {
+  display: inline-block;
+  flex-shrink: 0;
+  min-width: 7.5em;
+  font-family: 'SF Mono', 'JetBrains Mono', 'Menlo', monospace;
+}
 .log-info { color: var(--text-secondary); }
 .log-success { color: var(--success); }
 .log-warning { color: var(--warning); }
@@ -582,7 +669,9 @@ margin-top: -4px;
   background: var(--bg-card);
   color: var(--text-secondary);
   cursor: pointer;
-  transition: all 0.12s;
+  /* Not `all`: it animated the focus outline too, so the ring started at the
+     UA's 3px in the button's text colour and never settled on the 2px accent. */
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
 }
 
 .btn-sm:hover { background: var(--bg-hover); color: var(--text-primary); }
@@ -599,8 +688,8 @@ margin-top: -4px;
 
 .btn-save {
   padding: 7px 18px;
-  background: var(--accent);
-  color: white;
+  background: var(--accent-solid);
+  color: #ffffff;
   border: none;
   border-radius: var(--radius-sm);
   font-size: 13px;
@@ -609,7 +698,7 @@ margin-top: -4px;
   transition: background 0.15s;
 }
 
-.btn-save:hover { background: var(--accent-hover); }
+.btn-save:hover { background: var(--accent-solid-hover); }
 .btn-save:disabled { opacity: 0.5; cursor: not-allowed; }
 
 /* ============================================================
@@ -803,3 +892,17 @@ margin-top: -4px;
 #subscriptionPanel[hidden], #subscriptionPanel [hidden] { display: none; }
 #subscriptionQr { display: block; margin: 12px 0; background: white; image-rendering: pixelated; }
 #subscriptionCode { display: block; margin: 10px 0 16px; font: 600 1.2rem monospace; letter-spacing: .08em; }
+
+/* ============================================================
+   Reduced motion
+   ============================================================ */
+/* Two infinite animations ship (the starting-status pulse and the
+   indeterminate update bar) and nothing honoured the OS preference. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
